@@ -19,3 +19,8 @@ def calMetrix(fileName, y_pre, test_y):
     hh = (TP + FP) * (TP + FN) * (TN + FP) * (TN + FN)
     MCC = (TP * TN - FP * FN) / np.sqrt(hh)
     print('MCC: ', MCC)
+    return [metrics.accuracy_score(y_pre, test_y),
+            metrics.precision_score(y_pre, test_y),
+            metrics.recall_score(y_pre, test_y, average='binary'),
+            metrics.f1_score(y_pre, test_y),
+            MCC, FN, FP, TN, TP]

@@ -8,9 +8,9 @@ def read_data(xpath, ypath, group):
     # smart: 0 - 12
     # perf: 13 - 92
     # loc: 93
-    Loc = [93]
-    Sgroup = [i for i in range(13)]
-    Pgroup = [i for i in range(13,93)]
+    Loc = []
+    Sgroup = [i for i in range(14)]
+    Pgroup = []
     groups = {
         'S' : Sgroup,
         'P' : Pgroup,
@@ -49,9 +49,9 @@ def read_data1(xpath, ypath, group):
     # smart: 0 - 12
     # perf: 13 - 92
     # loc: 93
-    Loc = [93]
-    Sgroup = [i for i in range(13)]
-    Pgroup = [i for i in range(13,93)]
+    Loc = []
+    Sgroup = [i for i in range(14)]
+    Pgroup = []
     groups = {
         'S' : Sgroup,
         'P' : Pgroup,
@@ -77,3 +77,4 @@ def read_data1(xpath, ypath, group):
         train_X, test_X = X[train_index], X[test_index]
         train_y, test_y = y[train_index], y[test_index]
         yield train_X, train_y, test_X, test_y
+

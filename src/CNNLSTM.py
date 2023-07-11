@@ -3,13 +3,14 @@ from keras.layers import Dense, LSTM
 # from keras.layers import Convolution2D, MaxPooling2D, Reshape
 from keras.layers import Convolution1D, MaxPooling1D, Flatten
 from keras.models import Sequential
-from keras.layers.wrappers import TimeDistributed
+from keras.layers import TimeDistributed
 # from matplotlib import pyplot as plt
 # import random
 import argparse
 from utils.loadData import read_data
 from utils.evaluation import calMetrix
 import time
+import pandas as pd
 
 pt = lambda s:print(type(s),s)
 
@@ -24,11 +25,11 @@ def classifyRes(arr):
         arr[i] = 1 if arr[i]>0.5 else 0
     return arr
 
-def model_fit(train_X, train_y, test_X, test_y):
+def model_fit(train_X, train_y, test_X, test_y, iter):
     # define model
     model = Sequential()
     # model.add(TimeDistributed(cnn))
-    model.add(TimeDistributed(Convolution1D(128, 4, border_mode='same'), input_shape=train_X.shape[1:]))
+    model.add(TimeDistributed(Convolution1D(128, 4, padding='same'), input_shape=train_X.shape[1:]))
     model.add(TimeDistributed(MaxPooling1D(pool_size=2)))
     model.add(TimeDistributed(Flatten()))
     model.add(LSTM(128, return_sequences=True, name="lstm_layer0"))
@@ -41,16 +42,25 @@ def model_fit(train_X, train_y, test_X, test_y):
                   optimizer='adam',
                   metrics=['accuracy'])
     # %%
-    model.fit(train_X, train_y,batch_size=batch_size, nb_epoch=nb_epoch, verbose=0, validation_data=(test_X, test_y))
+    model.fit(train_X, train_y,batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(test_X, test_y))
 
     test_y = test_y.reshape(test_y.size, 1)
     predict_y = model.predict(test_X)
     predict_y = predict_y.reshape(predict_y.size, 1)
     predict_y = classifyRes(predict_y)
-    calMetrix(__file__, predict_y, test_y)
+    stats = calMetrix(__file__, predict_y, test_y)
+
     t0 = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
     model.save('../model/CNN_LSTM_model_%s.h5'%t0)
-
+    pd.DataFrame({"window": train_X.shape[1], "iter": iter, "accuracy": stats[0],
+                  "precision": stats[1],
+                  "recall": stats[2],
+                  "f1": stats[3],
+                  "MCC": stats[4],
+                  "FN": stats[5],
+                  "FP": stats[6],
+                  "TN": stats[7],
+                  "TP": stats[8]}).to_csv('./train_stats.csv', mode="a", index=False)
     # plt.plot(y_predict, 'r',label='forecast')
     # plt.plot(y_test, 'b',label='actual')
     # plt.legend()
@@ -66,6 +76,9 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    iter = 1
     for train_X, train_y, test_X, test_y in read_data(args.xpath, args.ypath, args.group):
-        model_fit(train_X, train_y, test_X, test_y)
+        model_fit(train_X, train_y, test_X, test_y, iter)
+        iter += 1
     # python3 CNNLSTM_args.py --xpath X1_10days.npy --ypath y1_10days.npy --group SPL
+
